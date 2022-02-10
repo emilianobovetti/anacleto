@@ -1,0 +1,72 @@
+version: "3.8"
+
+services:
+  certbot:
+    build: ./certbot
+    environment:
+      - CERTBOT_CERTNAME=${CERTBOT_CERTNAME}
+      - CERTBOT_DOMAINS=${CERTBOT_DOMAINS}
+      - CERTBOT_EMAIL=${CERTBOT_EMAIL}
+    volumes:
+      - ./data/certbot/etc/letsencrypt:/etc/letsencrypt
+      - ./data/certbot/public:/var/www/certbot
+      - ./data/certbot/var/lib/letsencrypt:/var/lib/letsencrypt
+      - ./data/certbot/var/log/letsencrypt:/var/log/letsencrypt
+    restart: unless-stopped
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/options-ssl-nginx.conf:/etc/nginx/options-ssl-nginx.conf
+      - ./nginx/tno.sh-certificates.conf:/etc/nginx/tno.sh-certificates.conf
+      - ./nginx/proxy-headers.conf:/etc/nginx/proxy-headers.conf
+      - ./nginx/acme-challenge.conf:/etc/nginx/acme-challenge.conf
+      - ./data/certbot/etc/letsencrypt:/etc/letsencrypt
+      - ./data/certbot/public:/var/www/certbot
+    depends_on:
+      - certbot
+      - home-assistant
+      - drone-server
+    restart: unless-stopped
+
+  home-assistant:
+    build: ./ssh-tunnel
+    ports:
+      - 6805:6805
+    volumes:
+      - ./ssh-tunnel/etc/ssh/sshd_config:/etc/ssh/sshd_config
+      - ./data/home-assistant/etc/ssh:/etc/ssh
+    environment:
+      - SSH_PORT=6805
+      - HOME_ASSISTANT_SSH_PUBKEY=${HOME_ASSISTANT_SSH_PUBKEY}
+    restart: unless-stopped
+
+  drone-server:
+    image: drone/drone:1
+    volumes:
+      - ./data/drone:/data
+    environment:
+      - DRONE_SERVER_HOST=drone.tno.sh
+      - DRONE_GITHUB_SERVER=https://github.com
+      - DRONE_USER_CREATE=username:emilianobovetti,admin:true
+      - DRONE_TLS_AUTOCERT=true
+      - DRONE_GITHUB_CLIENT_ID=${DRONE_GITHUB_CLIENT_ID}
+      - DRONE_GITHUB_CLIENT_SECRET=${DRONE_GITHUB_CLIENT_SECRET}
+      - DRONE_RPC_SECRET=${DRONE_RPC_SECRET}
+    restart: unless-stopped
+
+  drone-docker-runner:
+    image: drone/drone-runner-docker:1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    environment:
+      - DRONE_RPC_HOST=drone-server
+      - DRONE_RUNNER_CAPACITY=2
+      - DRONE_RPC_SECRET=${DRONE_RPC_SECRET}
+    depends_on:
+      - drone-server
+    restart: unless-stopped
