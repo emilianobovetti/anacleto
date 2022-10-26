@@ -71,3 +71,16 @@ services:
     depends_on:
       - drone-server
     restart: unless-stopped
+
+  pihole:
+    image: pihole/pihole:latest
+    ports:
+      - "53:53/tcp"
+      - "53:53/udp"
+    environment:
+      - TZ=Europe/Rome
+      - PIHOLE_WEBPASSWORD=${PIHOLE_WEBPASSWORD:?}
+    volumes:
+      - ./data/pihole/etc/pihole:/etc/pihole
+      - ./data/pihole/etc/dnsmasq.d:/etc/dnsmasq.d
+    restart: unless-stopped

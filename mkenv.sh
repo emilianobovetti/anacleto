@@ -238,6 +238,25 @@ env_home_assistant()
   echo
 }
 
+env_pihole()
+{
+  errecho " ╔═════════╗ "
+  errecho " ╟ Pi-hole ╢ "
+  errecho " ╚═════════╝ "
+  errecho
+
+  if [ -z "$PIHOLE_WEBPASSWORD" ]; then
+    errecho
+    errecho "Set an admin password for pi-hole web interface"
+    errecho
+
+    PIHOLE_WEBPASSWORD="$(ask -n "web password")"
+  fi
+
+  echo "PIHOLE_WEBPASSWORD=\"$PIHOLE_WEBPASSWORD\""
+  echo
+}
+
 check_current_dotenv()
 {
   if [ ! -f "$PWD/.env" ]; then
@@ -271,4 +290,5 @@ if check_current_dotenv; then
   env_certbot >> "$PWD/.env"
   env_drone >> "$PWD/.env"
   env_home_assistant >> "$PWD/.env"
+  env_pihole >> "$PWD/.env"
 fi
