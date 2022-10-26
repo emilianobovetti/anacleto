@@ -20,11 +20,12 @@ services:
       - 80:80
       - 443:443
     volumes:
-      - ./nginx/conf.d:/etc/nginx/conf.d
-      - ./nginx/options-ssl-nginx.conf:/etc/nginx/options-ssl-nginx.conf
-      - ./nginx/tno.sh-certificates.conf:/etc/nginx/tno.sh-certificates.conf
-      - ./nginx/proxy-headers.conf:/etc/nginx/proxy-headers.conf
-      - ./nginx/acme-challenge.conf:/etc/nginx/acme-challenge.conf
+      - ./nginx/etc/nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/etc/nginx/options-ssl-nginx.conf:/etc/nginx/options-ssl-nginx.conf
+      - ./nginx/etc/nginx/tno.sh-certificates.conf:/etc/nginx/tno.sh-certificates.conf
+      - ./nginx/etc/nginx/proxy-headers.conf:/etc/nginx/proxy-headers.conf
+      - ./nginx/etc/nginx/acme-challenge.conf:/etc/nginx/acme-challenge.conf
+      - ./nginx/docker-entrypoint.d:/docker-entrypoint.d
       - ./data/certbot/etc/letsencrypt:/etc/letsencrypt
       - ./data/certbot/public:/var/www/certbot
     depends_on:
