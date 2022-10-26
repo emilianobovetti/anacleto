@@ -25,6 +25,7 @@ services:
       - ./nginx/etc/nginx/tno.sh-certificates.conf:/etc/nginx/tno.sh-certificates.conf
       - ./nginx/etc/nginx/proxy-headers.conf:/etc/nginx/proxy-headers.conf
       - ./nginx/etc/nginx/acme-challenge.conf:/etc/nginx/acme-challenge.conf
+      - ./nginx/docker-entrypoint.d:/docker-entrypoint.d
       - ./data/certbot/etc/letsencrypt:/etc/letsencrypt
       - ./data/certbot/public:/var/www/certbot
     depends_on:
