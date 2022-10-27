@@ -2,6 +2,10 @@
 
 set -e
 
+if [ -n "$ANACLETO_DEBUG" ]; then
+  set -x
+fi
+
 alias errecho="echo 1>&2"
 
 ask_help()

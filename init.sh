@@ -2,6 +2,10 @@
 
 set -e
 
+if [ -n "$ANACLETO_DEBUG" ]; then
+  set -x
+fi
+
 if [ ! -f "$PWD/.env" ]; then
   sh "$PWD/mkenv.sh"
 fi
