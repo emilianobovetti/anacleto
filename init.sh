@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 
+set -e
+
 if [ ! -f "$PWD/.env" ]; then
   sh "$PWD/mkenv.sh"
 fi

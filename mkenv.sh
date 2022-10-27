@@ -1,5 +1,7 @@
 #!/usr/bin/env sh
 
+set -e
+
 alias errecho="echo 1>&2"
 
 ask_help()
