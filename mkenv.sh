@@ -1,5 +1,11 @@
 #!/usr/bin/env sh
 
+set -e
+
+if [ -n "$ANACLETO_DEBUG" ]; then
+  set -x
+fi
+
 alias errecho="echo 1>&2"
 
 ask_help()
@@ -218,10 +224,12 @@ env_drone()
 
 env_home_assistant()
 {
-  errecho " ╔════════════════╗ "
-  errecho " ╟ Home Assistant ╢ "
-  errecho " ╚════════════════╝ "
-  errecho
+  if [ -z "$HOME_ASSISTANT_SSH_PUBKEY" ]; then
+    errecho " ╔════════════════╗ "
+    errecho " ╟ Home Assistant ╢ "
+    errecho " ╚════════════════╝ "
+    errecho
+  fi
 
   if [ -z "$HOME_ASSISTANT_SSH_PUBKEY" ]; then
     errecho
@@ -235,6 +243,27 @@ env_home_assistant()
   fi
 
   echo "HOME_ASSISTANT_SSH_PUBKEY=\"$HOME_ASSISTANT_SSH_PUBKEY\""
+  echo
+}
+
+env_pihole()
+{
+  if [ -z "$PIHOLE_WEBPASSWORD" ]; then
+    errecho " ╔═════════╗ "
+    errecho " ╟ Pi-hole ╢ "
+    errecho " ╚═════════╝ "
+    errecho
+  fi
+
+  if [ -z "$PIHOLE_WEBPASSWORD" ]; then
+    errecho
+    errecho "Set an admin password for pi-hole web interface"
+    errecho
+
+    PIHOLE_WEBPASSWORD="$(ask -n "web password")"
+  fi
+
+  echo "PIHOLE_WEBPASSWORD=\"$PIHOLE_WEBPASSWORD\""
   echo
 }
 
@@ -263,12 +292,18 @@ check_current_dotenv()
   fi
 }
 
+NGINX_DOMAIN_LIST="$(find "$PWD/nginx/etc/nginx/conf.d" -name "*.conf" -exec sed -n "s/^\s*server_name \([^ ;]*\).*$/\1/p" {} +)"
+CERTBOT_DOMAINS="$(echo "$NGINX_DOMAIN_LIST" | paste -sd "," -)"
+
 # Provide some defaults, they are hardcoded in config files anyway
 CERTBOT_CERTNAME="tno.sh"
-CERTBOT_DOMAINS="tno.sh,drone.tno.sh,ha.tno.sh"
+
 
 if check_current_dotenv; then
   env_certbot >> "$PWD/.env"
   env_drone >> "$PWD/.env"
   env_home_assistant >> "$PWD/.env"
+  env_pihole >> "$PWD/.env"
+else
+  exit $?
 fi
