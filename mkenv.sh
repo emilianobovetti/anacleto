@@ -224,10 +224,12 @@ env_drone()
 
 env_home_assistant()
 {
-  errecho " ╔════════════════╗ "
-  errecho " ╟ Home Assistant ╢ "
-  errecho " ╚════════════════╝ "
-  errecho
+  if [ -z "$HOME_ASSISTANT_SSH_PUBKEY" ]; then
+    errecho " ╔════════════════╗ "
+    errecho " ╟ Home Assistant ╢ "
+    errecho " ╚════════════════╝ "
+    errecho
+  fi
 
   if [ -z "$HOME_ASSISTANT_SSH_PUBKEY" ]; then
     errecho
@@ -246,10 +248,12 @@ env_home_assistant()
 
 env_pihole()
 {
-  errecho " ╔═════════╗ "
-  errecho " ╟ Pi-hole ╢ "
-  errecho " ╚═════════╝ "
-  errecho
+  if [ -z "$PIHOLE_WEBPASSWORD" ]; then
+    errecho " ╔═════════╗ "
+    errecho " ╟ Pi-hole ╢ "
+    errecho " ╚═════════╝ "
+    errecho
+  fi
 
   if [ -z "$PIHOLE_WEBPASSWORD" ]; then
     errecho
