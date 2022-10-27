@@ -79,7 +79,7 @@ services:
       - "53:53/udp"
     environment:
       - TZ=Europe/Rome
-      - PIHOLE_WEBPASSWORD=${PIHOLE_WEBPASSWORD:?}
+      - WEBPASSWORD=${PIHOLE_WEBPASSWORD:?}
     volumes:
       - ./data/pihole/etc/pihole:/etc/pihole
       - ./data/pihole/etc/dnsmasq.d:/etc/dnsmasq.d
