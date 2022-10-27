@@ -282,9 +282,13 @@ check_current_dotenv()
   fi
 }
 
+NGINX_CONF_FILES="$(find "$PWD/nginx/etc/nginx/conf.d" -name "*.conf")"
+NGINX_DOMAIN_LIST="$(sed -n "s/^\s*server_name \([^ ;]*\).*$/\1/p" $NGINX_CONF_FILES)"
+CERTBOT_DOMAINS="$(echo "$NGINX_DOMAIN_LIST" | paste -sd "," -)"
+
 # Provide some defaults, they are hardcoded in config files anyway
 CERTBOT_CERTNAME="tno.sh"
-CERTBOT_DOMAINS="tno.sh,drone.tno.sh,ha.tno.sh"
+
 
 if check_current_dotenv; then
   env_certbot >> "$PWD/.env"
