@@ -297,4 +297,6 @@ if check_current_dotenv; then
   env_drone >> "$PWD/.env"
   env_home_assistant >> "$PWD/.env"
   env_pihole >> "$PWD/.env"
+else
+  exit $?
 fi
