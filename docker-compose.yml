@@ -84,3 +84,14 @@ services:
       - ./data/pihole/etc/pihole:/etc/pihole
       - ./data/pihole/etc/dnsmasq.d:/etc/dnsmasq.d
     restart: unless-stopped
+
+  pilade:
+    build: ./pilade
+    environment:
+      - PILADE_NEWSPAPER_USERNAME=${PILADE_NEWSPAPER_USERNAME:?}
+      - PILADE_NEWSPAPER_PASSWORD=${PILADE_NEWSPAPER_PASSWORD:?}
+      - PILADE_SMTP_HOST=${PILADE_SMTP_HOST:?}
+      - PILADE_SMTP_USERNAME=${PILADE_SMTP_USERNAME:?}
+      - PILADE_SMTP_PASSWORD=${PILADE_SMTP_PASSWORD:?}
+      - PILADE_RECIPIENTS=${PILADE_RECIPIENTS:?}
+    restart: unless-stopped
