@@ -267,6 +267,53 @@ env_pihole()
   echo
 }
 
+env_pilade()
+{
+  if [ -z "$PILADE_NEWSPAPER_USERNAME" ] || \
+      [ -z "$PILADE_NEWSPAPER_PASSWORD" ] || \
+      [ -z "$PILADE_SMTP_HOST" ] || \
+      [ -z "$PILADE_SMTP_USERNAME" ] || \
+      [ -z "$PILADE_SMTP_PASSWORD" ] || \
+      [ -z "$PILADE_RECIPIENTS" ]; then
+    errecho " ╔════════════╗ "
+    errecho " ╟ Set Pilade ╢ "
+    errecho " ╚════════════╝ "
+    errecho
+  fi
+
+  if [ -z "$PILADE_NEWSPAPER_USERNAME" ]; then
+    PILADE_NEWSPAPER_USERNAME="$(ask -n "ilfattoquotidiano.it username")"
+  fi
+
+  if [ -z "$PILADE_NEWSPAPER_PASSWORD" ]; then
+    PILADE_NEWSPAPER_PASSWORD="$(ask -n "ilfattoquotidiano.it password")"
+  fi
+
+  if [ -z "$PILADE_SMTP_HOST" ]; then
+    PILADE_SMTP_HOST="$(ask -n "SMTP hostname (something like smtp.gmail.com)")"
+  fi
+
+  if [ -z "$PILADE_SMTP_USERNAME" ]; then
+    PILADE_SMTP_USERNAME="$(ask -n "SMTP username (like your gmail address)")"
+  fi
+
+  if [ -z "$PILADE_SMTP_PASSWORD" ]; then
+    PILADE_SMTP_PASSWORD="$(ask -n "SMTP password (go to myaccount.google.com/apppasswords)")"
+  fi
+
+  if [ -z "$PILADE_RECIPIENTS" ]; then
+    PILADE_RECIPIENTS="$(ask -n "Comma-separated email addresses list")"
+  fi
+
+  echo "PILADE_NEWSPAPER_USERNAME=\"$PILADE_NEWSPAPER_USERNAME\""
+  echo "PILADE_NEWSPAPER_PASSWORD=\"$PILADE_NEWSPAPER_PASSWORD\""
+  echo "PILADE_SMTP_HOST=\"$PILADE_SMTP_HOST\""
+  echo "PILADE_SMTP_USERNAME=\"$PILADE_SMTP_USERNAME\""
+  echo "PILADE_SMTP_PASSWORD=\"$PILADE_SMTP_PASSWORD\""
+  echo "PILADE_RECIPIENTS=\"$PILADE_RECIPIENTS\""
+  echo
+}
+
 check_current_dotenv()
 {
   if [ ! -f "$PWD/.env" ]; then
@@ -304,6 +351,7 @@ if check_current_dotenv; then
   env_drone >> "$PWD/.env"
   env_home_assistant >> "$PWD/.env"
   env_pihole >> "$PWD/.env"
+  env_pilade >> "$PWD/.env"
 else
   exit $?
 fi
