@@ -38,37 +38,10 @@ export const scrapeNewspaper = async credentials => {
     links.map(e => e.href)
   )
 
-  const cleanSelector = `
-  .social,
-  .disquis,
-  .label-title,
-  .article-list,
-  .after-content,
-  .container-title,
-  .box-direttore-data,
-  .title-section.occhiello,
-  .attachment-post-thumbnail
-  `
-
-  const contentSelector = '.site-main'
-
   const articles = []
 
   for (const url of articlesUrl) {
-    try {
-      await page.goto(url)
-      await page.waitForSelector(contentSelector)
-      await page.$$eval(cleanSelector, elements => {
-        elements.forEach(e => e.remove())
-      })
-
-      const date = await page.$eval('.date', node => node.textContent)
-      const html = await page.$eval(contentSelector, node => node.innerHTML)
-
-      articles.push({ html, timestamp: parseLocaleDate(date)?.getTime() ?? 0 })
-    } catch (msg) {
-      console.error(msg)
-    }
+    articles.push(await scrapeArticle(page, url))
   }
 
   await browser.close()
@@ -102,4 +75,36 @@ export const scrapeNewspaper = async credentials => {
 
   </html>
   `
+}
+
+const cleanSelector = `
+.social,
+.disquis,
+.label-title,
+.article-list,
+.after-content,
+.container-title,
+.box-direttore-data,
+.title-section.occhiello,
+.attachment-post-thumbnail
+`
+
+const contentSelector = '.site-main'
+
+const scrapeArticle = async (page, url) => {
+  try {
+    await page.goto(url)
+    await page.waitForSelector(contentSelector)
+    await page.$$eval(cleanSelector, elements => {
+      elements.forEach(e => e.remove())
+    })
+
+    const date = await page.$eval('.date', node => node.textContent)
+    const html = await page.$eval(contentSelector, node => node.innerHTML)
+    const timestamp = parseLocaleDate(date)?.getTime() ?? 0
+
+    return { html, timestamp }
+  } catch (msg) {
+    console.error(msg)
+  }
 }
