@@ -12,8 +12,8 @@ docker: docker-build
 		--interactive=true \
 		--name=$(APP) \
 		--env-file=$(DOTENV) \
-		--volume="$(PWD):/home/app/src" \
-		--workdir=/home/app/src \
+		--volume="$(PWD)/src:/home/app/pilade/src" \
+		--workdir=/home/app/pilade \
 		$(APP) bash
 
 .PHONY: docker-build

@@ -15,9 +15,9 @@ RUN apt-get update && \
 
 USER app
 
-COPY --chown=app:app src/package.json src/yarn.lock /home/app/src/
+COPY --chown=app:app package.json yarn.lock /home/app/pilade/
 
-WORKDIR /home/app/src
+WORKDIR /home/app/pilade
 
 RUN yarn
 
@@ -25,7 +25,7 @@ FROM dev AS prod
 
 USER root
 
-COPY --chown=app:app src /home/app/src/
+COPY --chown=app:app src /home/app/pilade/src/
 COPY --chown=app:app entrypoint.sh /opt
 
 CMD ["/opt/entrypoint.sh"]
