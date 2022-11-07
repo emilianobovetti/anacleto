@@ -7,7 +7,7 @@ const login = async ({ username, password, headless = 'true' }) => {
     args: ['--no-sandbox'],
   })
 
-  const page = await browser.newPage()
+  const page = await blankPage(browser)
 
   await page.goto('https://shop.ilfattoquotidiano.it/login')
 
@@ -21,6 +21,12 @@ const login = async ({ username, password, headless = 'true' }) => {
   await page.waitForNavigation({ waitUntil: 'networkidle0' })
 
   return { browser, page }
+}
+
+const blankPage = async browser => {
+  const [firstPage] = await browser.pages()
+
+  return firstPage ?? browser.newPage()
 }
 
 export const scrapeNewspaper = async credentials => {
