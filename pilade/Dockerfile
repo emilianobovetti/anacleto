@@ -1,5 +1,8 @@
 FROM debian:stable-slim AS dev
 
+ARG UID=1000
+ARG GID=1000
+
 RUN apt-get update && \
   apt-get install -y gnupg curl && \
   curl -fsSL https://deb.nodesource.com/setup_19.x | bash - && \
@@ -7,8 +10,8 @@ RUN apt-get update && \
   echo "deb https://dl.yarnpkg.com/debian/ stable main" >/etc/apt/sources.list.d/yarn.list && \
   apt-get update && \
   apt-get install -y sudo cron nodejs yarn calibre && \
-  addgroup --system app && \
-  adduser --system --gid "$(getent group app | cut -d: -f3)" app
+  addgroup --system --gid "$GID" app && \
+  adduser --system --uid "$UID" --gid "$GID" app
 
 USER app
 
