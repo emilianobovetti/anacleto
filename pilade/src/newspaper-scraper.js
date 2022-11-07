@@ -101,9 +101,12 @@ const scrapeArticle = async (page, url) => {
   try {
     await page.goto(url)
     await page.waitForSelector(contentSelector)
+
     await page.$$eval(cleanSelector, elements => {
       elements.forEach(e => e.remove())
     })
+
+    await page.$$eval('img', inlineImages)
 
     const date = await page.$eval('.date', node => node.textContent)
     const html = await page.$eval(contentSelector, node => node.innerHTML)
@@ -112,5 +115,36 @@ const scrapeArticle = async (page, url) => {
     return { html, timestamp }
   } catch (msg) {
     console.error(msg)
+  }
+}
+
+const inlineImages = async elements => {
+  for (const img of elements) {
+    try {
+      const { protocol } = new URL(img.src)
+      const isProtocolHttp = ['http:', 'https:'].includes(protocol)
+
+      if (!isProtocolHttp) {
+        continue
+      }
+    } catch {
+      continue
+    }
+
+    const resp = await fetch(img.src)
+    const blob = await resp.blob()
+
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+
+      reader.onloadend = () => {
+        img.src = reader.result
+        resolve()
+      }
+
+      reader.onerror = reject
+
+      reader.readAsDataURL(blob)
+    })
   }
 }
