@@ -1,13 +1,13 @@
 import { humanReadableDate, parseLocaleDate } from './date.js'
 import puppeteer from 'puppeteer'
 
-const login = async ({ username, password }) => {
+const login = async ({ username, password, headless = 'true' }) => {
   const browser = await puppeteer.launch({
-    headless: true,
-    args: ['--no-sandbox'],
+    headless: JSON.parse(headless),
+    args: ['--no-sandbox', '--disable-web-security'],
   })
 
-  const page = await browser.newPage()
+  const page = await blankPage(browser)
 
   await page.goto('https://shop.ilfattoquotidiano.it/login')
 
@@ -21,6 +21,12 @@ const login = async ({ username, password }) => {
   await page.waitForNavigation({ waitUntil: 'networkidle0' })
 
   return { browser, page }
+}
+
+const blankPage = async browser => {
+  const [firstPage] = await browser.pages()
+
+  return firstPage ?? browser.newPage()
 }
 
 export const scrapeNewspaper = async credentials => {
@@ -38,37 +44,10 @@ export const scrapeNewspaper = async credentials => {
     links.map(e => e.href)
   )
 
-  const cleanSelector = `
-  .social,
-  .disquis,
-  .label-title,
-  .article-list,
-  .after-content,
-  .container-title,
-  .box-direttore-data,
-  .title-section.occhiello,
-  .attachment-post-thumbnail
-  `
-
-  const contentSelector = '.site-main'
-
   const articles = []
 
   for (const url of articlesUrl) {
-    try {
-      await page.goto(url)
-      await page.waitForSelector(contentSelector)
-      await page.$$eval(cleanSelector, elements => {
-        elements.forEach(e => e.remove())
-      })
-
-      const date = await page.$eval('.date', node => node.textContent)
-      const html = await page.$eval(contentSelector, node => node.innerHTML)
-
-      articles.push({ html, timestamp: parseLocaleDate(date)?.getTime() ?? 0 })
-    } catch (msg) {
-      console.error(msg)
-    }
+    articles.push(await scrapeArticle(page, url))
   }
 
   await browser.close()
@@ -102,4 +81,70 @@ export const scrapeNewspaper = async credentials => {
 
   </html>
   `
+}
+
+const cleanSelector = `
+.social,
+.disquis,
+.label-title,
+.article-list,
+.after-content,
+.container-title,
+.box-direttore-data,
+.title-section.occhiello,
+.attachment-post-thumbnail
+`
+
+const contentSelector = '.site-main'
+
+const scrapeArticle = async (page, url) => {
+  try {
+    await page.goto(url)
+    await page.waitForSelector(contentSelector)
+
+    await page.$$eval(cleanSelector, elements => {
+      elements.forEach(e => e.remove())
+    })
+
+    await page.$$eval('img', inlineImages)
+
+    const date = await page.$eval('.date', node => node.textContent)
+    const html = await page.$eval(contentSelector, node => node.innerHTML)
+    const timestamp = parseLocaleDate(date)?.getTime() ?? 0
+
+    return { html, timestamp }
+  } catch (msg) {
+    console.error(msg)
+  }
+}
+
+const inlineImages = async elements => {
+  for (const img of elements) {
+    try {
+      const { protocol } = new URL(img.src)
+      const isProtocolHttp = ['http:', 'https:'].includes(protocol)
+
+      if (!isProtocolHttp) {
+        continue
+      }
+    } catch {
+      continue
+    }
+
+    const resp = await fetch(img.src)
+    const blob = await resp.blob()
+
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+
+      reader.onloadend = () => {
+        img.src = reader.result
+        resolve()
+      }
+
+      reader.onerror = reject
+
+      reader.readAsDataURL(blob)
+    })
+  }
 }

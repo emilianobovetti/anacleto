@@ -3,6 +3,7 @@ import { humanReadableDate, isoDate } from './date.js'
 import { mkdirSync, rmSync, readFileSync, writeFileSync } from 'fs'
 import { scrapeNewspaper } from './newspaper-scraper.js'
 import { spawnSync } from 'child_process'
+import { uniqueString } from './random.js'
 import nodemailer from 'nodemailer'
 
 // Exit codes based on /usr/include/sysexits.h directives
@@ -41,9 +42,10 @@ if (recipients == null || recipients.length === 0) {
 const htmlContent = await scrapeNewspaper({
   username: parseEnv('PILADE_NEWSPAPER_USERNAME'),
   password: parseEnv('PILADE_NEWSPAPER_PASSWORD'),
+  headless: process.env.PILADE_HEADLESS,
 })
 
-const tmp = join('/tmp', `pilade-${(Math.random() * 2 ** 31) | 0}`)
+const tmp = join('/tmp', `pilade-${uniqueString()}`)
 const htmlFilename = join(tmp, `newspaper-${isoDate}.html`)
 const epubFilename = join(tmp, `newspaper-${isoDate}.epub`)
 
