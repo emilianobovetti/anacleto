@@ -1,9 +1,9 @@
 import { humanReadableDate, parseLocaleDate } from './date.js'
 import puppeteer from 'puppeteer'
 
-const login = async ({ username, password }) => {
+const login = async ({ username, password, headless = 'true' }) => {
   const browser = await puppeteer.launch({
-    headless: true,
+    headless: JSON.parse(headless),
     args: ['--no-sandbox'],
   })
 

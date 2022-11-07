@@ -42,6 +42,7 @@ if (recipients == null || recipients.length === 0) {
 const htmlContent = await scrapeNewspaper({
   username: parseEnv('PILADE_NEWSPAPER_USERNAME'),
   password: parseEnv('PILADE_NEWSPAPER_PASSWORD'),
+  headless: process.env.PILADE_HEADLESS,
 })
 
 const tmp = join('/tmp', `pilade-${uniqueString()}`)
