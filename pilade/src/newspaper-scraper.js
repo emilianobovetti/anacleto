@@ -4,7 +4,7 @@ import puppeteer from 'puppeteer'
 const login = async ({ username, password, headless = 'true' }) => {
   const browser = await puppeteer.launch({
     headless: JSON.parse(headless),
-    args: ['--no-sandbox'],
+    args: ['--no-sandbox', '--disable-web-security'],
   })
 
   const page = await blankPage(browser)
