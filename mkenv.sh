@@ -242,7 +242,7 @@ env_home_assistant()
     HOME_ASSISTANT_SSH_PUBKEY="$(ask -n "SSH public key")"
   fi
 
-  echo "HOME_ASSISTANT_SSH_PUBKEY=$HOME_ASSISTANT_SSH_PUBKEY"
+  echo "HOME_ASSISTANT_SSH_PUBKEY=\"$HOME_ASSISTANT_SSH_PUBKEY\""
   echo
 }
 

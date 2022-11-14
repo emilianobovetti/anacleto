@@ -9,8 +9,17 @@ if [ -z "$SSH_PORT" ]; then
   SSH_PORT=22
 fi
 
-su semola -c 'mkdir -p ~/.ssh'
-su semola -c "echo \"$HOME_ASSISTANT_SSH_PUBKEY\" > ~/.ssh/authorized_keys"
-su semola -c 'chmod 600 ~/.ssh/authorized_keys'
+ssh-keygen -A
 
-exec /usr/sbin/sshd -p "$SSH_PORT" -D -e "$@"
+mkdir -p /home/semola/.ssh
+echo "$HOME_ASSISTANT_SSH_PUBKEY" > /home/semola/.ssh/authorized_keys
+chmod 600 /home/semola/.ssh/authorized_keys
+chown -R semola /home/semola/.ssh
+
+SSHD_OPTIONS="-D -e"
+
+if [ -n "$DEBUG" ]; then
+  SSHD_OPTIONS="-ddd $SSHD_OPTIONS"
+fi
+
+exec /usr/sbin/sshd $SSHD_OPTIONS -p "$SSH_PORT"
