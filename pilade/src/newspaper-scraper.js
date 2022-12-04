@@ -1,55 +1,53 @@
 import { humanReadableDate, parseLocaleDate } from './date.js'
-import puppeteer from 'puppeteer'
+import { chromium, devices } from 'playwright'
 
 const login = async ({ username, password, headless = 'true' }) => {
-  const browser = await puppeteer.launch({
+  const browser = await chromium.launch({
     headless: JSON.parse(headless),
     args: ['--no-sandbox', '--disable-web-security'],
   })
 
-  const page = await blankPage(browser)
+  const context = await browser.newContext(devices['Desktop Chrome'])
+  const page = await context.newPage()
 
   await page.goto('https://shop.ilfattoquotidiano.it/login')
 
   const cookieConsent = 'a.cl-consent__btn[data-role="b_agree"]'
-  await page.waitForSelector(cookieConsent).then(e => e.click())
-  await page.waitForSelector(cookieConsent, { hidden: true })
+  await page.locator(cookieConsent).click()
 
-  await page.$('input[name="username"]').then(e => e.type(username))
-  await page.$('input[name="password"]').then(e => e.type(password))
-  await page.click('button[name="login"]')
-  await page.waitForNavigation({ waitUntil: 'networkidle0' })
+  await page.locator('input[name="username"]').type(username)
+  await page.locator('input[name="password"]').type(password)
+  await page.locator('button[name="login"]').click()
 
-  return { browser, page }
+  return { browser, context, page }
 }
 
-const blankPage = async browser => {
-  const [firstPage] = await browser.pages()
-
-  return firstPage ?? browser.newPage()
-}
-
-export const scrapeNewspaper = async credentials => {
-  const { browser, page } = await login(credentials)
+export const scrapeNewspaper = async opts => {
+  const { browser, context, page } = await login(opts)
 
   await page.goto('https://www.ilfattoquotidiano.it/in-edicola')
-  await page.waitForNetworkIdle()
 
   const articleLinkSelector = `
   .box-direttore .box-direttore-article-title a,
   .article-preview h2 a
   `
 
-  const articlesUrl = await page.$$eval(articleLinkSelector, links =>
-    links.map(e => e.href)
-  )
+  const articlesUrl = await page
+    .locator(articleLinkSelector)
+    .evaluateAll(links => links.map(e => e.href))
 
   const articles = []
 
   for (const url of articlesUrl) {
-    articles.push(await scrapeArticle(page, url))
+    try {
+      const articleData = await scrapeArticle(page, url)
+      articles.push(articleData)
+    } catch (msg) {
+      console.error(msg)
+    }
   }
 
+  await context.close()
   await browser.close()
 
   const separator = '\n<hr />\n'
@@ -98,24 +96,20 @@ const cleanSelector = `
 const contentSelector = '.site-main'
 
 const scrapeArticle = async (page, url) => {
-  try {
-    await page.goto(url)
-    await page.waitForSelector(contentSelector)
+  await page.goto(url)
+  await page.locator(contentSelector).waitFor()
 
-    await page.$$eval(cleanSelector, elements => {
-      elements.forEach(e => e.remove())
-    })
+  await page.$$eval(cleanSelector, elements => {
+    elements.forEach(e => e.remove())
+  })
 
-    await page.$$eval('img', inlineImages)
+  await page.$$eval('img', inlineImages)
 
-    const date = await page.$eval('.date', node => node.textContent)
-    const html = await page.$eval(contentSelector, node => node.innerHTML)
-    const timestamp = parseLocaleDate(date)?.getTime() ?? 0
+  const date = await page.locator('.date').textContent()
+  const html = await page.locator(contentSelector).innerHTML()
+  const timestamp = parseLocaleDate(date)?.getTime() ?? 0
 
-    return { html, timestamp }
-  } catch (msg) {
-    console.error(msg)
-  }
+  return { html, timestamp }
 }
 
 const inlineImages = async elements => {
