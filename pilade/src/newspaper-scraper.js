@@ -19,6 +19,8 @@ const login = async ({ username, password, headless = 'true' }) => {
   await page.locator('input[name="password"]').type(password)
   await page.locator('button[name="login"]').click()
 
+  await page.locator(cookieConsent).waitFor({ state: 'hidden' })
+
   return { browser, context, page }
 }
 
