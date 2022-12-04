@@ -128,7 +128,7 @@ const inlineImages = async elements => {
     const resp = await fetch(img.src)
     const blob = await resp.blob()
 
-    await new Promise((resolve, reject) => {
+    await new Promise(resolve => {
       const reader = new FileReader()
 
       reader.onloadend = () => {
@@ -136,7 +136,10 @@ const inlineImages = async elements => {
         resolve()
       }
 
-      reader.onerror = reject
+      reader.onerror = () => {
+        img.remove()
+        resolve()
+      }
 
       reader.readAsDataURL(blob)
     })
