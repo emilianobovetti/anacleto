@@ -128,7 +128,7 @@ const inlineImages = async elements => {
     const resp = await fetch(img.src)
     const blob = await resp.blob()
 
-    return new Promise((resolve, reject) => {
+    await new Promise((resolve, reject) => {
       const reader = new FileReader()
 
       reader.onloadend = () => {
