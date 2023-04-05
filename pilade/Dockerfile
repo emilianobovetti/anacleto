@@ -3,13 +3,44 @@ FROM debian:stable-slim AS dev
 ARG UID=1000
 ARG GID=1000
 
+ARG CALIBRE_VERSION=6.14.1
+ARG CALIBRE_ARCH=x86_64
+
+ENV PLAYWRIGHT_DEPS \
+  libglib2.0-0 \
+  libnss3 \
+  libnspr4 \
+  libatk1.0-0 \
+  libatk-bridge2.0-0 \
+  libcups2 \
+  libdrm2 \
+  libdbus-1-3 \
+  libatspi2.0-0 \
+  libx11-6 \
+  libxcomposite1 \
+  libxdamage1 \
+  libxext6 \
+  libxfixes3 \
+  libxrandr2 \
+  libgbm1 \
+  libxcb1 \
+  libxkbcommon0 \
+  libpango-1.0-0 \
+  libcairo2 \
+  libasound2
+
 RUN apt-get update && \
   apt-get install -y gnupg curl && \
   curl -fsSL https://deb.nodesource.com/setup_19.x | bash - && \
   curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor >/etc/apt/trusted.gpg.d/yarn.gpg  && \
   echo "deb https://dl.yarnpkg.com/debian/ stable main" >/etc/apt/sources.list.d/yarn.list && \
   apt-get update && \
-  apt-get install -y sudo cron nodejs yarn calibre && \
+  apt-get install -y sudo cron nodejs yarn xz-utils python3-minimal $PLAYWRIGHT_DEPS && \
+  curl -fsSL -o /tmp/calibre.txz "https://download.calibre-ebook.com/${CALIBRE_VERSION}/calibre-${CALIBRE_VERSION}-${CALIBRE_ARCH}.txz" && \
+  mkdir -p /opt/calibre && \
+  tar --directory /opt/calibre -xf /tmp/calibre.txz && \
+  rm -rf /tmp/calibre.txz && \
+  /opt/calibre/calibre_postinstall && \
   addgroup --system --gid "$GID" app && \
   adduser --system --uid "$UID" --gid "$GID" app
 
