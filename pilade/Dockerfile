@@ -3,9 +3,6 @@ FROM debian:stable-slim AS dev
 ARG UID=1000
 ARG GID=1000
 
-ARG CALIBRE_VERSION=6.14.1
-ARG CALIBRE_ARCH=x86_64
-
 ENV PLAYWRIGHT_DEPS \
   libglib2.0-0 \
   libnss3 \
@@ -35,12 +32,7 @@ RUN apt-get update && \
   curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor >/etc/apt/trusted.gpg.d/yarn.gpg  && \
   echo "deb https://dl.yarnpkg.com/debian/ stable main" >/etc/apt/sources.list.d/yarn.list && \
   apt-get update && \
-  apt-get install -y sudo cron nodejs yarn xz-utils python3-minimal $PLAYWRIGHT_DEPS && \
-  curl -fsSL -o /tmp/calibre.txz "https://download.calibre-ebook.com/${CALIBRE_VERSION}/calibre-${CALIBRE_VERSION}-${CALIBRE_ARCH}.txz" && \
-  mkdir -p /opt/calibre && \
-  tar --directory /opt/calibre -xf /tmp/calibre.txz && \
-  rm -rf /tmp/calibre.txz && \
-  /opt/calibre/calibre_postinstall && \
+  apt-get install -y sudo cron nodejs yarn $PLAYWRIGHT_DEPS && \
   addgroup --system --gid "$GID" app && \
   adduser --system --uid "$UID" --gid "$GID" app
 
