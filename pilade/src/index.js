@@ -1,9 +1,6 @@
-import { basename, join } from 'path'
 import { humanReadableDate, isoDate } from './date.js'
-import { mkdirSync, rmSync, readFileSync, writeFileSync } from 'fs'
 import { scrapeNewspaper } from './newspaper-scraper.js'
-import { spawnSync } from 'child_process'
-import { uniqueString } from './random.js'
+import { createHash } from 'crypto'
 import nodemailer from 'nodemailer'
 
 // Exit codes based on /usr/include/sysexits.h directives
@@ -45,31 +42,6 @@ const htmlContent = await scrapeNewspaper({
   headless: process.env.PILADE_HEADLESS,
 })
 
-const tmp = join('/tmp', `pilade-${uniqueString()}`)
-const htmlFilename = join(tmp, `newspaper-${isoDate}.html`)
-const epubFilename = join(tmp, `newspaper-${isoDate}.epub`)
-
-mkdirSync(tmp)
-writeFileSync(htmlFilename, htmlContent)
-
-const { status, error, stderr } = spawnSync('ebook-convert', [
-  htmlFilename,
-  epubFilename,
-])
-
-if (status !== 0) {
-  if (error != null) {
-    console.error(error)
-  }
-
-  if (stderr != null) {
-    process.stderr.write(stderr)
-  }
-
-  rmSync(tmp, { recursive: true, force: true })
-  process.exit(EX_SOFTWARE)
-}
-
 const transporter = nodemailer.createTransport({
   host: smtpHost,
   port: 465,
@@ -80,25 +52,28 @@ const transporter = nodemailer.createTransport({
   },
 })
 
+/*
+ * Note: one of `text` or `html` field has to be present.
+ * The root message content-type needs to be `multipart/mixed`,
+ * but if we don't put a message body here there will be no
+ * root multipart and just a single html attachment and it
+ * won't be detected by amazon.
+ */
 const email = {
   from: `Ser Pilade <${smtpUsername}>`,
   to: recipients,
   subject: `Il Fatto Quotidiano, ${humanReadableDate}`,
-  html: htmlContent,
+  text: createHash('sha256').update(htmlContent).digest('hex'),
   attachments: [
     {
-      filename: basename(epubFilename),
+      filename: `newspaper-${isoDate}.html`,
       encoding: 'utf-8',
-      contentType: 'application/epub+zip',
+      contentType: 'text/html',
       contentTransferEncoding: 'base64',
       contentDisposition: 'attachment',
-      content: readFileSync(epubFilename),
+      content: htmlContent,
     },
   ],
 }
 
-try {
-  await transporter.sendMail(email)
-} finally {
-  rmSync(tmp, { recursive: true, force: true })
-}
+await transporter.sendMail(email)
