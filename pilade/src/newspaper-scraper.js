@@ -21,6 +21,8 @@ const login = async ({ username, password, headless = 'true' }) => {
 
   await page.locator(cookieConsent).waitFor({ state: 'hidden' })
 
+  await page.waitForURL('https://shop.ilfattoquotidiano.it')
+
   return { browser, context, page }
 }
 
