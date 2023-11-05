@@ -2,19 +2,26 @@
 # yarn lockfile v1
 
 
+fsevents@2.3.2:
+  version "2.3.2"
+  resolved "https://registry.yarnpkg.com/fsevents/-/fsevents-2.3.2.tgz#8a526f78b8fdf4623b709e0b975c52c24c02fd1a"
+  integrity sha512-xiqMQR4xAeHTuB9uWm+fFRcIOgKBMiOBP+eXiyT7jsgVCq1bkVygt00oASowB7EdtpOHaaPgKt812P9ab+DDKA==
+
 nodemailer@^6.8.0:
   version "6.8.0"
   resolved "https://registry.yarnpkg.com/nodemailer/-/nodemailer-6.8.0.tgz#804bcc5256ee5523bc914506ee59f8de8f0b1cd5"
   integrity sha512-EjYvSmHzekz6VNkNd12aUqAco+bOkRe3Of5jVhltqKhEsjw/y0PYPJfp83+s9Wzh1dspYAkUW/YNQ350NATbSQ==
 
-playwright-core@1.28.1:
-  version "1.28.1"
-  resolved "https://registry.yarnpkg.com/playwright-core/-/playwright-core-1.28.1.tgz#8400be9f4a8d1c0489abdb9e75a4cc0ffc3c00cb"
-  integrity sha512-3PixLnGPno0E8rSBJjtwqTwJe3Yw72QwBBBxNoukIj3lEeBNXwbNiKrNuB1oyQgTBw5QHUhNO3SteEtHaMK6ag==
+playwright-core@1.39.0:
+  version "1.39.0"
+  resolved "https://registry.yarnpkg.com/playwright-core/-/playwright-core-1.39.0.tgz#efeaea754af4fb170d11845b8da30b2323287c63"
+  integrity sha512-+k4pdZgs1qiM+OUkSjx96YiKsXsmb59evFoqv8SKO067qBA+Z2s/dCzJij/ZhdQcs2zlTAgRKfeiiLm8PQ2qvw==
 
-playwright@^1.28.1:
-  version "1.28.1"
-  resolved "https://registry.yarnpkg.com/playwright/-/playwright-1.28.1.tgz#f23247f1de466ff73d7230d94df96271e5da6583"
-  integrity sha512-92Sz6XBlfHlb9tK5UCDzIFAuIkHHpemA9zwUaqvo+w7sFMSmVMGmvKcbptof/eJObq63PGnMhM75x7qxhTR78Q==
+playwright@^1.39.0:
+  version "1.39.0"
+  resolved "https://registry.yarnpkg.com/playwright/-/playwright-1.39.0.tgz#184c81cd6478f8da28bcd9e60e94fcebf566e077"
+  integrity sha512-naE5QT11uC/Oiq0BwZ50gDmy8c8WLPRTEWuSSFVG2egBka/1qMoSqYQcROMT9zLwJ86oPofcTH2jBY/5wWOgIw==
   dependencies:
-    playwright-core "1.28.1"
+    playwright-core "1.39.0"
+  optionalDependencies:
+    fsevents "2.3.2"
