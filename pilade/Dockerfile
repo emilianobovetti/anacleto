@@ -1,7 +1,7 @@
 FROM debian:stable-slim AS dev
 
-ARG UID=1000
-ARG GID=1000
+ARG APP_UID=1000
+ARG APP_GID=1000
 
 ENV PLAYWRIGHT_DEPS \
   libglib2.0-0 \
@@ -26,15 +26,28 @@ ENV PLAYWRIGHT_DEPS \
   libcairo2 \
   libasound2
 
-RUN apt-get update && \
-  apt-get install -y gnupg curl && \
-  curl -fsSL https://deb.nodesource.com/setup_19.x | bash - && \
-  curl -sS https://dl.yarnpkg.com/debian/pubkey.gpg | gpg --dearmor >/etc/apt/trusted.gpg.d/yarn.gpg  && \
-  echo "deb https://dl.yarnpkg.com/debian/ stable main" >/etc/apt/sources.list.d/yarn.list && \
-  apt-get update && \
-  apt-get install -y sudo cron nodejs yarn $PLAYWRIGHT_DEPS && \
-  addgroup --system --gid "$GID" app && \
-  adduser --system --uid "$UID" --gid "$GID" app
+ENV DEBIAN_FRONTEND=noninteractive \
+  DEBCONF_NOWARNINGS=yes \
+  LANG=C.UTF-8
+
+RUN set -xe \
+  && apt-get update \
+  && apt-get install -y --no-install-recommends \
+    ca-certificates \
+    curl \
+    gnupg \
+  && mkdir -p /etc/apt/keyrings \
+  && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
+  && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_20.x nodistro main" > /etc/apt/sources.list.d/nodesource.list \
+  && apt-get update \
+  && apt-get install -y --no-install-recommends \
+    sudo \
+    cron \
+    nodejs \
+    $PLAYWRIGHT_DEPS \
+  && corepack enable \
+  && groupadd --gid "$APP_GID" app \
+  && useradd --create-home --home-dir /home/app --uid "$APP_UID" --gid "$APP_GID" app
 
 USER app
 
