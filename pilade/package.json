@@ -2,7 +2,7 @@
   "license": "GPL-3.0",
   "type": "module",
   "dependencies": {
-    "nodemailer": "^6.9.7",
+    "nodemailer": "^6.9.9",
     "playwright": "^1.39.0"
   }
 }
