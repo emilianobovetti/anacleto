@@ -12,7 +12,7 @@ const login = async ({ username, password, headless = 'true' }) => {
 
   await page.goto('https://shop.ilfattoquotidiano.it/login')
 
-  const cookieConsent = 'a.cl-consent__btn[data-role="b_agree"]'
+  const cookieConsent = '.iubenda-cs-accept-btn'
   await page.locator(cookieConsent).click()
 
   await page.locator('input[name="username"]').fill(username)
