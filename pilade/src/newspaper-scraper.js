@@ -15,8 +15,8 @@ const login = async ({ username, password, headless = 'true' }) => {
   const cookieConsent = 'a.cl-consent__btn[data-role="b_agree"]'
   await page.locator(cookieConsent).click()
 
-  await page.locator('input[name="username"]').type(username)
-  await page.locator('input[name="password"]').type(password)
+  await page.locator('input[name="username"]').fill(username)
+  await page.locator('input[name="password"]').fill(password)
   await page.locator('button[name="login"]').click()
 
   await page.locator(cookieConsent).waitFor({ state: 'hidden' })
