@@ -1,6 +1,6 @@
 #!/usr/bin/env sh
 
-APP_ENV="HOME=/home/app $(env | grep '^PILADE_' | tr '\n' ' ')"
+APP_ENV="HOME=/home/app PLAYWRIGHT_BROWSERS_PATH=/opt/playwright $(env | grep '^PILADE_' | tr '\n' ' ')"
 JS_ENTRYPOINT=/home/app/pilade/src/index.js
 LOG_DIR=/var/log/pilade
 LOG_FILE="$LOG_DIR/pilade.log"
