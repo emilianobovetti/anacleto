@@ -4,10 +4,27 @@ import { chromium, devices } from 'playwright'
 const login = async ({ username, password, headless = 'true' }) => {
   const browser = await chromium.launch({
     headless: JSON.parse(headless),
-    args: ['--no-sandbox', '--disable-web-security'],
+    args: ['--no-sandbox', '--disable-web-security', '--disable-gpu'],
   })
 
-  const context = await browser.newContext(devices['Desktop Chrome'])
+  const { deviceScaleFactor, hasTouch, isMobile, userAgent, viewport } =
+    devices['Desktop Chrome']
+
+  const context = await browser.newContext({
+    acceptDownloads: true,
+    bypassCSP: true,
+    deviceScaleFactor,
+    hasTouch,
+    ignoreHTTPSErrors: true,
+    isMobile,
+    javaScriptEnabled: true,
+    locale: 'it-IT',
+    serviceWorkers: 'allow',
+    timezoneId: 'Europe/Rome',
+    userAgent,
+    viewport,
+  })
+
   const page = await context.newPage()
 
   await page.goto('https://shop.ilfattoquotidiano.it/login')
@@ -28,16 +45,47 @@ const login = async ({ username, password, headless = 'true' }) => {
 export const scrapeNewspaper = async opts => {
   const { browser, context, page } = await login(opts)
 
-  await page.goto('https://www.ilfattoquotidiano.it/in-edicola')
+  await page.goto('https://www.ilfattoquotidiano.it/in-edicola/')
 
-  const articleLinkSelector = `
-  .box-direttore .box-direttore-article-title a,
-  .article-preview h2 a
-  `
+  await page.$$eval('#podcast-home', elements => {
+    elements.forEach(e => e.remove())
+  })
+
+  const articleLinkSelector = [
+    '.ifq-card-direttore__article-title a',
+    '.ifq-news-spotlight__title a',
+    '.ifq-news-aside__title a',
+    'ifq-news-spotlight__eyelet + a',
+  ].join(', ')
 
   const articlesUrl = await page
     .locator(articleLinkSelector)
     .evaluateAll(links => links.map(e => e.href))
+
+  const body = page.locator('body')
+  const bodyId = await body.getAttribute('id')
+  const bodyClass = await body.getAttribute('class')
+
+  const stylesElem = await page
+    .locator('head style, link[as="style"]')
+    .evaluateAll(elements =>
+      elements.map(elem => {
+        return elem.tagName === 'STYLE'
+          ? { style: elem.innerText }
+          : { href: elem.getAttribute('href') }
+      })
+    )
+
+  const stylesheets = await Promise.all(
+    stylesElem.map(async elem => {
+      if (typeof elem.style === 'string') {
+        return elem.style
+      }
+
+      const resp = await fetch(elem.href)
+      return resp.text()
+    })
+  )
 
   const articles = []
 
@@ -53,7 +101,7 @@ export const scrapeNewspaper = async opts => {
   await context.close()
   await browser.close()
 
-  const separator = '\n<hr />\n'
+  const separator = '\n'
 
   return `
   <!DOCTYPE html>
@@ -64,53 +112,57 @@ export const scrapeNewspaper = async opts => {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
-    <link rel="stylesheet" href="https://www.ilfattoquotidiano.it/wp-content/themes/ifq-extra/css/normalize.css?ver=1666972418132" media="all" />
-    <link rel="stylesheet" href="https://www.ilfattoquotidiano.it/wp-content/themes/ifq-extra/css/main.min.css?ver=1666972418132" media="all" />
-    <link rel="stylesheet" href="https://www.ilfattoquotidiano.it/wp-content/themes/ifq-extra/css/flickity.min.css?ver=1666972418132" media="all" />
+    ${stylesheets.map(css => `<style>${css}</style>`).join('')}
 
     <title>Il Fatto Quotidiano, ${humanReadableDate}</title>
   </head>
 
-  <body class="ifq-paper-post-template-default single single-ifq-paper-post postid-6855385 single-format-standard no-sidebar">
-    <main id="primary" class="site-main">
-      ${articles
-        .sort((a1, a2) => a2.timestamp - a1.timestamp)
-        .map(art => art.html)
-        .join(separator)}
-    </main>
+  <body id="${bodyId}" class="${bodyClass}">
+    <div class="ifq-main-wrapper" style="margin-top: 0rem">
+      <main class="ifq-main">
+        <section
+          class="ifq-main-content main-container"
+          data-el="ifq-main-content"
+        >
+        ${articles
+          .sort((a1, a2) => a2.timestamp - a1.timestamp)
+          .map(art => art.html)
+          .join(separator)}
+        </section>
+      </main>
+    </div>
   </body>
 
   </html>
   `
 }
 
-const cleanSelector = `
-.social,
-.disquis,
-.label-title,
-.article-list,
-.after-content,
-.container-title,
-.box-direttore-data,
-.title-section.occhiello,
-.attachment-post-thumbnail
-`
+const elementsToRemove = [
+  '.ifq-post__info',
+  '.ifq-post__last-update',
+  '.ifq-post__thumbnail',
+  '.ifq-author-header__date',
+  '.ifq-post__discussion',
+  '.ifq-post__audio',
+  '.ifq-post__utils',
+  '.ifq-post__footer',
+].join(', ')
 
-const contentSelector = '.site-main'
+const articleContentSelector = '.ifq-post'
 
 const scrapeArticle = async (page, url) => {
   await page.goto(url)
-  await page.locator(contentSelector).waitFor()
+  await page.locator(articleContentSelector).waitFor()
 
-  await page.$$eval(cleanSelector, elements => {
+  await page.$$eval(elementsToRemove, elements => {
     elements.forEach(e => e.remove())
   })
 
   await page.$$eval('img', inlineImages)
 
-  const date = await page.locator('.date').textContent()
-  const html = await page.locator(contentSelector).innerHTML()
-  const timestamp = parseLocaleDate(date)?.getTime() ?? 0
+  const entryDate = await page.locator('.entry-date').textContent()
+  const html = await page.locator(articleContentSelector).innerHTML()
+  const timestamp = parseLocaleDate(entryDate)?.getTime() ?? 0
 
   return { html, timestamp }
 }

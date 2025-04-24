@@ -49,7 +49,8 @@ RUN set -xe \
   && groupadd --gid "$APP_GID" app \
   && useradd --create-home --home-dir /home/app --uid "$APP_UID" --gid "$APP_GID" app
 
-COPY --from=mcr.microsoft.com/playwright:v1.45.0-jammy \
+#  ref: https://playwright.dev/docs/docker
+COPY --from=mcr.microsoft.com/playwright:v1.52.0-noble \
   /ms-playwright \
   /opt/playwright
 
