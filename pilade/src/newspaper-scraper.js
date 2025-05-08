@@ -1,6 +1,8 @@
 import { humanReadableDate, parseLocaleDate } from './date.js'
 import { chromium, devices } from 'playwright'
 
+const waitUntil = 'domcontentloaded'
+
 const login = async ({ username, password, headless = 'true' }) => {
   const browser = await chromium.launch({
     headless: JSON.parse(headless),
@@ -27,7 +29,7 @@ const login = async ({ username, password, headless = 'true' }) => {
 
   const page = await context.newPage()
 
-  await page.goto('https://shop.ilfattoquotidiano.it/login')
+  await page.goto('https://shop.ilfattoquotidiano.it/login', { waitUntil })
 
   const cookieConsent = page.locator('a').getByText(/Accetta e chiudi/i)
   await cookieConsent.click()
@@ -37,7 +39,7 @@ const login = async ({ username, password, headless = 'true' }) => {
   await page.locator('input[name="password"]').fill(password)
   await page.locator('button[name="login"]').click()
 
-  await page.waitForURL('https://shop.ilfattoquotidiano.it')
+  await page.waitForURL('https://shop.ilfattoquotidiano.it', { waitUntil })
 
   return { browser, context, page }
 }
@@ -45,7 +47,7 @@ const login = async ({ username, password, headless = 'true' }) => {
 export const scrapeNewspaper = async opts => {
   const { browser, context, page } = await login(opts)
 
-  await page.goto('https://www.ilfattoquotidiano.it/in-edicola/')
+  await page.goto('https://www.ilfattoquotidiano.it/in-edicola/', { waitUntil })
 
   await page.$$eval('#podcast-home', elements => {
     elements.forEach(e => e.remove())
@@ -151,7 +153,8 @@ const elementsToRemove = [
 const articleContentSelector = '.ifq-post'
 
 const scrapeArticle = async (page, url) => {
-  await page.goto(url)
+  await page.goto(url, { waitUntil })
+
   await page.locator(articleContentSelector).waitFor()
 
   await page.$$eval(elementsToRemove, elements => {

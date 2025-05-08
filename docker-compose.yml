@@ -92,6 +92,7 @@ services:
       - PILADE_SMTP_USERNAME=${PILADE_SMTP_USERNAME:?}
       - PILADE_SMTP_PASSWORD=${PILADE_SMTP_PASSWORD:?}
       - PILADE_RECIPIENTS=${PILADE_RECIPIENTS:?}
+      - PILADE_HEADLESS=true
     volumes:
       - ./data/pilade/var/log/pilade:/var/log/pilade
     restart: unless-stopped
