@@ -39,7 +39,14 @@ const login = async ({ username, password, headless = 'true' }) => {
   await page.locator('input[name="password"]').fill(password)
   await page.locator('button[name="login"]').click()
 
-  await page.waitForURL('https://shop.ilfattoquotidiano.it', { waitUntil })
+  try {
+    await page.waitForURL('https://shop.ilfattoquotidiano.it', {
+      waitUntil,
+      timeout: 10_000,
+    })
+  } catch (error) {
+    console.warn(`An error occurred during page reload after login: ${error}`)
+  }
 
   return { browser, context, page }
 }
